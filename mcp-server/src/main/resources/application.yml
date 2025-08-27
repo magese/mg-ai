@@ -1,0 +1,12 @@
+server:
+  port: 13700
+
+spring:
+  application:
+    name: mcp-server
+  profiles:
+    active: dev
+
+logging:
+  level:
+    root: info
