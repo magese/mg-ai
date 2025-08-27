@@ -1,8 +1,12 @@
 package com.magese.ai.mcpserver;
 
+import com.magese.ai.mcpserver.service.CalculatorService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 /**
  * MCP服务端
@@ -22,5 +26,11 @@ public class McpServerApp {
         }  catch (Exception e) {
             log.error("Error starting MCP Server", e);
         }
+    }
+
+    @Bean
+    public ToolCallbackProvider calculatorTools(CalculatorService calculatorService) {
+        log.info("register calculatorTools: {}", calculatorService);
+        return MethodToolCallbackProvider.builder().toolObjects(calculatorService).build();
     }
 }

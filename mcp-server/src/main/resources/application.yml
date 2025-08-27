@@ -6,6 +6,12 @@ spring:
     name: mcp-server
   profiles:
     active: dev
+  ai:
+    mcp:
+      server:
+        name: mcp-server
+        version: 1.0.0
+        type: async
 
 logging:
   level:
