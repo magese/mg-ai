@@ -1,0 +1,23 @@
+server:
+  port: 15977
+
+spring:
+  application:
+    name: mcp-agent
+  profiles:
+    active: dev
+
+langchain4j:
+  open-ai:
+    streaming-chat-model:
+      model-name: ${DOUBAO_MODEL_NAME}
+      api-key: ${DOUBAO_API_KEY}
+      base-url: https://ark.cn-beijing.volces.com/api/v3/
+      log-requests: true
+      log-responses: true
+      return-thinking: true
+
+logging:
+  level:
+    root: info
+    dev.langchain4j: debug
