@@ -10,8 +10,8 @@ spring:
 langchain4j:
   open-ai:
     streaming-chat-model:
-      model-name: ep-20250829155452-dp8pl
-      api-key: bb087ae1-98d8-42a1-879b-5df07505b621
+      model-name: ${DOUBAO_MODEL_NAME}
+      api-key: ${DOUBAO_API_KEY}
       base-url: https://ark.cn-beijing.volces.com/api/v3/
       log-requests: true
       log-responses: true
