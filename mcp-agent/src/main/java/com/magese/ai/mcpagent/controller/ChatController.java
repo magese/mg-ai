@@ -1,5 +1,7 @@
 package com.magese.ai.mcpagent.controller;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -42,13 +44,28 @@ public class ChatController {
                     DeepSeekAssistantMessage deepSeekAssistantMessage = (DeepSeekAssistantMessage) next.getResult().getOutput();
                     String reasoningContent = deepSeekAssistantMessage.getReasoningContent();
                     String textContent = deepSeekAssistantMessage.getText();
-                    answer.append(textContent);
-                    reasoner.append(reasoningContent);
+                    if (StrUtil.isNotBlank(textContent)) {
+                        answer.append(textContent);
+                    }
+                    if (StrUtil.isNotBlank(reasoningContent)) {
+                        reasoner.append(reasoningContent);
+                    }
                 })
                 .doOnComplete(() -> {
                     System.out.println(reasoner);
                     System.out.println(answer);
                 })
-                .mapNotNull(r -> r.getResult().getOutput().toString());
+                .mapNotNull(r -> {
+                    DeepSeekAssistantMessage deepSeekAssistantMessage = (DeepSeekAssistantMessage) r.getResult().getOutput();
+                    String reasoningContent = deepSeekAssistantMessage.getReasoningContent();
+                    String textContent = deepSeekAssistantMessage.getText();
+                    if (StrUtil.isNotBlank(textContent)) {
+                        return textContent;
+                    }
+                    if (StrUtil.isNotBlank(reasoningContent)) {
+                        return reasoningContent;
+                    }
+                    return "🥵🥵🥵";
+                });
     }
 }
