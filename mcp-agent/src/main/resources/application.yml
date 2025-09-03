@@ -6,18 +6,15 @@ spring:
     name: mcp-agent
   profiles:
     active: dev
-
-langchain4j:
-  open-ai:
-    streaming-chat-model:
-      model-name: ${DOUBAO_MODEL_NAME}
+  ai:
+    deepseek:
       api-key: ${DOUBAO_API_KEY}
-      base-url: https://ark.cn-beijing.volces.com/api/v3/
-      log-requests: true
-      log-responses: true
-      return-thinking: true
+      chat:
+        base-url:  https://ark.cn-beijing.volces.com
+        completions-path: /api/v3/chat/completions
+        options:
+          model: ${DOUBAO_MODEL_NAME}
 
 logging:
   level:
     root: info
-    dev.langchain4j: debug
