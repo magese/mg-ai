@@ -8,12 +8,8 @@ spring:
     active: dev
   ai:
     deepseek:
-      api-key: ${DOUBAO_API_KEY}
-      chat:
-        base-url:  https://ark.cn-beijing.volces.com
-        completions-path: /api/v3/chat/completions
-        options:
-          model: ${DOUBAO_MODEL_NAME}
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
 
 logging:
   level:
