@@ -18,9 +18,8 @@ import org.springframework.context.annotation.Configuration;
 public class ChatClientConfig {
 
     @Bean
-    public ChatClient doubaoChatClient(ChatClient.Builder chatClientBuilder) {
+    public ChatClient deepseekChatClient(ChatClient.Builder chatClientBuilder) {
         return chatClientBuilder
-                .defaultSystem("你是一个高冷的全能助手，以简介清晰且专业的方式来回答问题。")
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(
                                 request -> "[llm request]: " + JSONUtil.toJsonStr(request.context()),
