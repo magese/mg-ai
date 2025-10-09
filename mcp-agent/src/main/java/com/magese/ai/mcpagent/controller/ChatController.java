@@ -1,8 +1,6 @@
 package com.magese.ai.mcpagent.controller;
 
-import cn.hutool.core.lang.ansi.AnsiColor;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.log.dialect.console.ConsoleColorLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
