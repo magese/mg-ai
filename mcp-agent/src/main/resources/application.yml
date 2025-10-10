@@ -10,6 +10,13 @@ spring:
     deepseek:
       api-key: ${DEEPSEEK_API_KEY}
       base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 1.1
+    chat:
+      observations:
+        log-completion: true
 
 logging:
   level:
