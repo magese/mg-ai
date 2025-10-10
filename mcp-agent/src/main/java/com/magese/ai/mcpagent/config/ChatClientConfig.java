@@ -1,11 +1,17 @@
 package com.magese.ai.mcpagent.config;
 
-import cn.hutool.json.JSONUtil;
+import com.magese.ai.mcpagent.advisor.LogAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  * 聊天客户端配置
@@ -18,15 +24,37 @@ import org.springframework.context.annotation.Configuration;
 public class ChatClientConfig {
 
     @Bean
-    public ChatClient deepseekChatClient(ChatClient.Builder chatClientBuilder) {
-        return chatClientBuilder
+    public ChatClient guiguiChatClient(DeepSeekChatModel deepSeekChatModel,
+                                       MessageChatMemoryAdvisor chatMemoryAdvisor,
+                                       LogAdvisor logAdvisor) {
+        return ChatClient.builder(deepSeekChatModel)
+                .defaultSystem(new ClassPathResource("prompts/guigui-system.md"))
                 .defaultAdvisors(
-                        new SimpleLoggerAdvisor(
-                                request -> "[llm request]: " + JSONUtil.toJsonStr(request.context()),
-                                response -> "[llm response]: " + JSONUtil.toJsonStr(response.getMetadata()),
-                                0
-                        )
+                        chatMemoryAdvisor,
+                        logAdvisor
                 )
+                .build();
+    }
+
+    @Bean
+    public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
+        return MessageWindowChatMemory.builder()
+                .chatMemoryRepository(chatMemoryRepository)
+                .maxMessages(50)
+                .build();
+    }
+
+    @Bean
+    public LogAdvisor logAdvisor() {
+        return LogAdvisor.builder()
+                .order(Ordered.LOWEST_PRECEDENCE)
+                .build();
+    }
+
+    @Bean
+    public MessageChatMemoryAdvisor chatMemoryAdvisor(ChatMemory chatMemory) {
+        return MessageChatMemoryAdvisor.builder(chatMemory)
+                .order(Ordered.HIGHEST_PRECEDENCE)
                 .build();
     }
 }
