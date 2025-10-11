@@ -1,8 +1,10 @@
 package com.magese.ai.mcpagent;
 
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 /**
  * MCP代理
@@ -18,7 +20,8 @@ public class McpAgentApp {
         try {
             log.info("MCP Agent 开始启动...");
             SpringApplication.run(McpAgentApp.class, args);
-            log.info("MCP Agent 启动成功");
+            ServerProperties serverProperties = SpringUtil.getBean(ServerProperties.class);
+            log.info("MCP Agent 启动成功 [http://127.0.0.1:{}]", serverProperties.getPort());
         } catch (Exception e) {
             log.error("MCP Agent 启动异常", e);
         }

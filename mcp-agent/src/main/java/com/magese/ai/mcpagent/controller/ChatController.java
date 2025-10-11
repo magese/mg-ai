@@ -3,7 +3,7 @@ package com.magese.ai.mcpagent.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,9 +26,9 @@ public class ChatController {
     @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestParam String message) {
         log.info("Chat User Message:\n[{}]", message);
-        UserMessage userMessage = new UserMessage(message);
         return guiguiChatClient.prompt()
-                .messages(userMessage)
+                .user(message)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, 1))
                 .stream()
                 .content();
     }

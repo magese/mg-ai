@@ -17,6 +17,11 @@ spring:
     chat:
       observations:
         log-completion: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
 
 logging:
   level:

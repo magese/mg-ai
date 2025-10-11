@@ -29,6 +29,7 @@
         <spring-ai.version>1.0.3</spring-ai.version>
         <lombok.version>1.18.38</lombok.version>
         <hutool.version>5.8.40</hutool.version>
+        <postgresql.version>42.7.8</postgresql.version>
     </properties>
 
     <dependencyManagement>
@@ -39,6 +40,11 @@
                 <version>${spring-ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
             </dependency>
 
             <dependency>
