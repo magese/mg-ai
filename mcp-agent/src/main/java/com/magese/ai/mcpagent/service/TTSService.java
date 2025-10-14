@@ -5,8 +5,8 @@ import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import com.magese.ai.mcpagent.client.tts.VolcTTSWebSocketClient;
 import com.magese.ai.mcpagent.client.tts.VolcTTSProperties;
+import com.magese.ai.mcpagent.client.tts.VolcTTSWebSocketClient;
 import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsRequest;
 import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsResult;
 import com.magese.ai.mcpagent.client.tts.protocol.EventType;
@@ -85,21 +85,22 @@ public class TTSService {
     /**
      * 合成语音
      *
-     * @param text 语音文本
+     * @param text  语音文本
+     * @param voice 语音音色
      * @return 语音流
      */
-    public VolTTSWsResult synthesizeSpeech(String text) {
+    public VolTTSWsResult synthesizeSpeech(String text, String voice) {
         VolTTSWsRequest request = VolTTSWsRequest.builder()
                 .user(new VolTTSWsRequest.User(IdUtil.nanoId()))
                 .namespace("BidirectionalTTS")
                 .reqParams(VolTTSWsRequest.ReqParams.builder()
                         .text(text)
-                        .speaker(volcTTSProperties.getVoice())
+                        .speaker(voice.isEmpty() ? volcTTSProperties.getVoice() : voice)
                         .audioParams(
                                 VolTTSWsRequest.ReqParams.AudioParams.builder()
                                         .format(volcTTSProperties.getEncoding())
                                         .bitRate(24000)
-                                        .speechRate(10)
+                                        .speechRate(5)
                                         .enableTimestamp(true)
                                         .build()
                         )
@@ -107,6 +108,7 @@ public class TTSService {
                                 .enableLanguageDetector(true)
                                 .maxLengthToFilterParenthesis(50)
                                 .build()
+                                .toJsonString()
                         )
                         .build()
                 )

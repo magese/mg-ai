@@ -40,8 +40,8 @@ public class ChatController {
     }
 
     @GetMapping(value = "/tts", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public Mono<ResponseEntity<byte[]>> tts(@RequestParam String text) {
-        VolTTSWsResult result = ttsService.synthesizeSpeech(text);
+    public Mono<ResponseEntity<byte[]>> tts(@RequestParam String text, @RequestParam(required = false) String voice) {
+        VolTTSWsResult result = ttsService.synthesizeSpeech(text, voice);
         return Mono.just(ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", result.fileName()))
                 .header(HttpHeaders.CONTENT_TYPE, String.format("audio/%s", result.encoding()))

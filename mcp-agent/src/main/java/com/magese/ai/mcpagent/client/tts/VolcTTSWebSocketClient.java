@@ -111,7 +111,6 @@ public class VolcTTSWebSocketClient {
                     @Override
                     public void onMessage(ByteBuffer bytes) {
                         try {
-                            log.info("火山云语音合成接收消息：{}", bytes.array().length);
                             Message message = Message.unmarshal(bytes.array());
                             boolean offered = messageQueue.offer(message, QUEUE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                             if (!offered) {

@@ -29,7 +29,7 @@ volc:
     access-token: ${VOLC_TTS_ACCESS_TOKEN}
     endpoint: wss://openspeech.bytedance.com/api/v3/tts/bidirection
     encoding: mp3
-    voice: zh_female_tianxinxiaomei_emo_v2_mars_bigtts
+    voice: ICL_zh_male_xiaonaigou_edf58cf28b8b_tob
 
 logging:
   level:

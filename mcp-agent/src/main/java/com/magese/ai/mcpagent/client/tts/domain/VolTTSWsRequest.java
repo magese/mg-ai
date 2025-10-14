@@ -3,6 +3,8 @@ package com.magese.ai.mcpagent.client.tts.domain;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.magese.ai.mcpagent.util.JacksonUtil;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -68,16 +70,11 @@ public record VolTTSWsRequest(
             String ssml,
             @NotNull String speaker,
             @NotNull @JsonProperty("audio_params") AudioParams audioParams,
-            Additions additions,
+            String additions,
             @JsonProperty("mix_speaker") MixSpeaker mixSpeaker
     ) {
         public ReqParams withText(String text) {
             return new ReqParams(text, this.model, this.ssml, this.speaker, this.audioParams, this.additions, this.mixSpeaker);
-        }
-
-        @JsonValue
-        public String toJson() {
-            return JacksonUtil.toJsonString(this);
         }
 
         /**
@@ -171,6 +168,10 @@ public record VolTTSWsRequest(
                 @JsonProperty("context_texts") List<String> contextTexts,
                 @JsonProperty("section_id") String sectionId
         ) {
+            public String toJsonString() {
+                return JacksonUtil.toJsonString(this);
+            }
+
             /**
              * AIGC元数据水印配置
              *
