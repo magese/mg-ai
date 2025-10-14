@@ -5,8 +5,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
-        <relativePath />
+        <version>3.5.6</version>
+        <relativePath/>
     </parent>
 
     <groupId>com.magese</groupId>
@@ -30,6 +30,7 @@
         <lombok.version>1.18.38</lombok.version>
         <hutool.version>5.8.40</hutool.version>
         <postgresql.version>42.7.8</postgresql.version>
+        <java-websocket.version>1.6.0</java-websocket.version>
     </properties>
 
     <dependencyManagement>
@@ -45,6 +46,11 @@
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.java-websocket</groupId>
+                <artifactId>Java-WebSocket</artifactId>
+                <version>${java-websocket.version}</version>
             </dependency>
 
             <dependency>
