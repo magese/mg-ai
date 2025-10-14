@@ -27,6 +27,7 @@ volc:
   tts:
     app-id: ${VOLC_TTS_APP_ID}
     access-token: ${VOLC_TTS_ACCESS_TOKEN}
+    endpoint: wss://openspeech.bytedance.com/api/v3/tts/bidirection
     encoding: mp3
     voice: zh_female_tianxinxiaomei_emo_v2_mars_bigtts
 

@@ -6,6 +6,7 @@ import com.magese.ai.mcpagent.client.tts.protocol.EventType;
 import com.magese.ai.mcpagent.client.tts.protocol.Message;
 import com.magese.ai.mcpagent.client.tts.protocol.MsgType;
 import com.magese.ai.mcpagent.client.tts.protocol.MsgTypeFlagBits;
+import com.magese.ai.mcpagent.util.JacksonUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -140,7 +141,7 @@ public class VolcTTSWebSocketClient {
                     }
                 };
 
-                log.info("正在连接火山云语音合成WebSocket...");
+                log.info("正在连接火山云语音合成WebSocket，连接地址：{}，请求头信息：{}", endpoint, JacksonUtil.toJsonString(headers));
                 client.connect();
 
             } catch (Exception e) {
