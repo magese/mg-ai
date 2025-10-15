@@ -3,24 +3,19 @@ package com.magese.ai.mcpagent.service;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.StrUtil;
 import com.magese.ai.mcpagent.client.tts.VolcTTSProperties;
-import com.magese.ai.mcpagent.client.tts.VolcTTSWebSocketClient;
-import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsRequest;
+import com.magese.ai.mcpagent.client.tts.VolcTTSSessionManager;
 import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsResult;
-import com.magese.ai.mcpagent.client.tts.protocol.EventType;
-import com.magese.ai.mcpagent.client.tts.protocol.Message;
-import com.magese.ai.mcpagent.client.tts.protocol.MsgType;
 import com.magese.ai.mcpagent.constant.Consts;
-import com.magese.ai.mcpagent.util.JacksonUtil;
+import com.magese.ai.mcpagent.domain.AudioChunk;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 语音处理Service
@@ -33,135 +28,124 @@ import java.io.File;
 @Service
 public class TTSService {
 
-    private final VolcTTSWebSocketClient VolcTTSWebSocketClient;
+
     private final VolcTTSProperties volcTTSProperties;
+    private final VolcTTSSessionManager volcTTSSessionManager;
+
 
     /**
      * 合成语音
      *
-     * @param request 语音合成请求
+     * @param text 语音文本
      * @return 语音流
      */
-    public VolTTSWsResult synthesizeSpeech(VolTTSWsRequest request) {
-        VolTTSWsRequest.ReqParams reqParams = request.reqParams();
-
-        String voice = StrUtil.isBlank(reqParams.speaker()) ? volcTTSProperties.getVoice() : reqParams.speaker();
-        String encoding = StrUtil.isBlank(reqParams.audioParams().format()) ? volcTTSProperties.getEncoding() : reqParams.audioParams().format();
-
-        // Start connection
-        VolcTTSWebSocketClient.sendStartConnection();
-        // Wait for connection started
-        VolcTTSWebSocketClient.waitForMessage(MsgType.FULL_SERVER_RESPONSE, EventType.CONNECTION_STARTED);
-        String sessionId = IdUtil.fastUUID();
-        // Start session
-        VolTTSWsRequest startRequest = request.withEvent(EventType.START_SESSION.getValue())
-                .withReqParams(reqParams.withText(null));
-        VolcTTSWebSocketClient.sendStartSession(JacksonUtil.toJsonBytes(startRequest), sessionId);
-        // Wait for session started
-        Message message = VolcTTSWebSocketClient.waitForMessage(MsgType.FULL_SERVER_RESPONSE, EventType.SESSION_STARTED);
-        log.info("TTS会话已建立：{}", message);
-
-        // 发送请求
-        // Process each sentence
-        // Send text
-        String text = reqParams.text();
-        for (char c : text.toCharArray()) {
-            // Create current request
-            VolTTSWsRequest currentRequest = request.withEvent(EventType.TASK_REQUEST.getValue())
-                    .withReqParams(reqParams.withText(String.valueOf(c)));
-            VolcTTSWebSocketClient.sendTaskRequest(JacksonUtil.toJsonBytes(currentRequest), sessionId);
+    public VolTTSWsResult synthesizeSpeech(String text) {
+        // 检查是否有活跃会话
+        if (hasActiveSession()) {
+            throw new IllegalStateException("TTS service is busy with session: " + getCurrentSessionId());
         }
 
-        // End session
-        VolcTTSWebSocketClient.sendFinishSession(sessionId);
+        String voice = volcTTSProperties.getVoice();
+        String encoding = volcTTSProperties.getEncoding();
+        List<AudioChunk> chunks = new ArrayList<>();
 
-        // 接收响应
-        ByteArrayOutputStream audioStream = receiveMessage();
-        // 保存音频文件
-        File audioFile = saveAudioFile(audioStream, voice, encoding);
-        return new VolTTSWsResult(audioStream, voice, encoding, audioFile.getName(), audioFile.length());
+        try {
+            // 使用阻塞方式收集所有音频块
+            volcTTSSessionManager.synthesizeText(text)
+                    .doOnNext(chunks::add)
+                    .thenMany(volcTTSSessionManager.endSession())
+                    .doOnNext(chunks::add)
+                    .blockLast(); // 阻塞直到所有数据接收完成
+
+            // 合并所有音频数据
+            byte[] audioBytes = combineAudioChunks(chunks);
+            File file = saveAudioFile(audioBytes, voice, encoding);
+            return new VolTTSWsResult(audioBytes, voice, encoding, file.getName(), file.length());
+
+        } catch (Exception e) {
+            log.error("Error in synchronous TTS synthesis", e);
+            volcTTSSessionManager.forceEndSession();
+            throw new RuntimeException("TTS synthesis failed", e);
+        }
+    }
+
+    /**
+     * 合并多个音频块为一个连续的音频数据
+     */
+    private byte[] combineAudioChunks(List<AudioChunk> chunks) {
+        if (chunks.isEmpty()) {
+            return new byte[0];
+        }
+
+        // 计算总长度
+        int totalLength = chunks.stream()
+                .mapToInt(chunk -> chunk.data().length)
+                .sum();
+
+        // 合并所有数据
+        byte[] combined = new byte[totalLength];
+        int currentPosition = 0;
+
+        for (AudioChunk chunk : chunks) {
+            byte[] chunkData = chunk.data();
+            System.arraycopy(chunkData, 0, combined, currentPosition, chunkData.length);
+            currentPosition += chunkData.length;
+        }
+
+        log.debug("Combined {} audio chunks into {} bytes", chunks.size(), totalLength);
+        return combined;
     }
 
     /**
      * 合成语音
      *
-     * @param text  语音文本
-     * @param voice 语音音色
      * @return 语音流
      */
-    public VolTTSWsResult synthesizeSpeech(String text, String voice) {
-        VolTTSWsRequest request = VolTTSWsRequest.builder()
-                .user(new VolTTSWsRequest.User(IdUtil.nanoId()))
-                .namespace("BidirectionalTTS")
-                .reqParams(VolTTSWsRequest.ReqParams.builder()
-                        .text(text)
-                        .speaker(voice.isEmpty() ? volcTTSProperties.getVoice() : voice)
-                        .audioParams(
-                                VolTTSWsRequest.ReqParams.AudioParams.builder()
-                                        .format(volcTTSProperties.getEncoding())
-                                        .bitRate(24000)
-                                        .speechRate(5)
-                                        .enableTimestamp(true)
-                                        .build()
-                        )
-                        .additions(VolTTSWsRequest.ReqParams.Additions.builder()
-                                .enableLanguageDetector(true)
-                                .maxLengthToFilterParenthesis(50)
-                                .build()
-                                .toJsonString()
-                        )
-                        .build()
-                )
-                .build();
-        return synthesizeSpeech(request);
+    public Flux<AudioChunk> synthesizeSpeechStream(String text) {
+        return volcTTSSessionManager.synthesizeText(text);
+    }
+
+
+    /**
+     * 结束会话
+     */
+    public Flux<AudioChunk> endSession() {
+        return volcTTSSessionManager.endSession();
     }
 
     /**
-     * 接收消息
+     * 强制结束会话（用于清理）
      */
-    @SneakyThrows
-    private ByteArrayOutputStream receiveMessage() {
-        boolean audioReceived = false;
-        ByteArrayOutputStream audioStream = new ByteArrayOutputStream();
-        while (true) {
-            Message msg = VolcTTSWebSocketClient.receiveMessage();
-            switch (msg.getType()) {
-                case FULL_SERVER_RESPONSE:
-                    break;
-                case AUDIO_ONLY_SERVER:
-                    if (!audioReceived && audioStream.size() > 0) {
-                        audioReceived = true;
-                    }
-                    if (msg.getPayload() != null) {
-                        audioStream.write(msg.getPayload());
-                    }
-                    break;
-                default:
-                    throw new RuntimeException("Unexpected message: " + msg);
-            }
-            if (msg.getEvent() == EventType.SESSION_FINISHED) {
-                break;
-            }
-        }
+    public void forceEndSession() {
+        volcTTSSessionManager.forceEndSession();
+    }
 
-        if (!audioReceived) {
-            throw new RuntimeException("No audio data received");
-        }
-        return audioStream;
+    /**
+     * 检查是否有活跃会话
+     */
+    public boolean hasActiveSession() {
+        return volcTTSSessionManager.hasActiveSession();
+    }
+
+    /**
+     * 获取当前会话ID
+     */
+    public String getCurrentSessionId() {
+        return volcTTSSessionManager.getCurrentSessionId();
     }
 
     /**
      * 保存音频文件
      *
-     * @param audioStream 音频文件流
-     * @param voice       语音音色
-     * @param encoding    文件编码
+     * @param audioBytes 音频文件流
+     * @param voice      语音音色
+     * @param encoding   文件编码
      */
-    private File saveAudioFile(ByteArrayOutputStream audioStream, String voice, String encoding) {
+    private File saveAudioFile(byte[] audioBytes, String voice, String encoding) {
         String time = LocalDateTimeUtil.format(LocalDateTimeUtil.now(), DatePattern.PURE_DATETIME_FORMATTER);
         String fileName = String.format("%s-%s.%s", voice, time, encoding);
         String filePath = Consts.LOCAL_FILE_DIR + "audios/" + fileName;
-        File file = FileUtil.writeBytes(audioStream.toByteArray(), filePath);
+        File file = FileUtil.writeBytes(audioBytes, filePath);
         log.info("音频文件已保存：{}，文件大小：{}", file.getPath(), FileUtil.readableFileSize(file));
         return file;
     }

@@ -258,7 +258,7 @@ public class VolcTTSWebSocketClient {
 
         try {
             if (client != null && isActive.get()) {
-                log.info("语音合成发送：{}", message);
+                log.debug("语音合成发送：{}", message);
                 client.send(message.marshal());
             } else {
                 throw new IllegalStateException("WebSocket连接不可用，无法发送消息");
@@ -303,11 +303,18 @@ public class VolcTTSWebSocketClient {
         }
     }
 
-    public Message waitForMessage(MsgType type, EventType event) {
+    @SneakyThrows
+    public Message receiveMessageImmediately() {
+        Message message = messageQueue.poll();
+        if (message != null) {
+            log.info("try语音合成接收：{}", message);
+        }
+        return message;
+    }
+
+    public void waitForMessage(MsgType type, EventType event) {
         Message message = receiveMessage();
-        if (message.getType() == type && message.getEvent() == event) {
-            return message;
-        } else {
+        if (message.getType() != type || message.getEvent() != event) {
             throw new RuntimeException("Unexpected message: " + message);
         }
     }

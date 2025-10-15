@@ -1,7 +1,5 @@
 package com.magese.ai.mcpagent.client.tts.domain;
 
-import java.io.ByteArrayOutputStream;
-
 /**
  * 火山云语音处理结果
  *
@@ -9,7 +7,7 @@ import java.io.ByteArrayOutputStream;
  * @since 2025/10/13 10:01
  */
 public record VolTTSWsResult(
-        ByteArrayOutputStream audioStream,
+        byte[] audioBytes,
         String voice,
         String encoding,
         String fileName,
