@@ -8,6 +8,7 @@ import com.magese.ai.mcpagent.client.tts.VolcTTSSessionManager;
 import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsResult;
 import com.magese.ai.mcpagent.constant.Consts;
 import com.magese.ai.mcpagent.domain.AudioChunk;
+import com.magese.ai.mcpagent.domain.ChatEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -104,7 +105,6 @@ public class TTSService {
     public Flux<AudioChunk> synthesizeSpeechStream(String text) {
         return volcTTSSessionManager.synthesizeText(text);
     }
-
 
     /**
      * 结束会话

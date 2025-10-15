@@ -25,11 +25,7 @@ public record ChatEvent(
     }
 
     public static ChatEvent audioEvent(AudioChunk audio) {
-        return new ChatEvent(EventType.AUDIO, null, audio.data(), audio.format());
-    }
-
-    public static ChatEvent playEvent(AudioChunk audio) {
-        return new ChatEvent(EventType.PLAY, audio.text(), null, audio.format());
+        return new ChatEvent(audio.data() == null ? EventType.PLAY : EventType.AUDIO, audio.text(), audio.data(), audio.format());
     }
 
     public static ChatEvent endEvent() {

@@ -56,7 +56,7 @@ public class ChatController {
                             .map(ChatEvent::audioEvent)
                             .onErrorResume(e -> {
                                 log.error("Error synthesizing text: {}", text, e);
-                                return Flux.empty(); // 继续处理后续文本
+                                return Flux.empty();
                             });
                     return Flux.concat(textEvent, audioEvents);
                 })
