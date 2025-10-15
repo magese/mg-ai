@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const welcomeMessage = document.createElement('div');
     welcomeMessage.className = 'welcome-message';
-    welcomeMessage.textContent = '您好！我是龟龟，你好吗？';
+    welcomeMessage.textContent = 'Hello！我是俛俛姐姐，你好吗？';
     chatContainer.appendChild(welcomeMessage);
   }
 
