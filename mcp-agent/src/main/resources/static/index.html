@@ -77,6 +77,7 @@
           border-top: 1px solid #e0e0e0;
           display: flex;
           gap: 10px;
+          align-items: center;
       }
 
       .input-field {
@@ -111,6 +112,49 @@
       .send-button:disabled {
           background-color: #a0a0a0;
           cursor: not-allowed;
+      }
+
+      .audio-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 8px;
+      }
+
+      .play-button {
+          padding: 6px 12px;
+          background-color: #28a745;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+      }
+
+      .play-button:disabled {
+          background-color: #a0a0a0;
+          cursor: not-allowed;
+      }
+
+      .audio-progress {
+          flex: 1;
+          height: 4px;
+          background-color: #e0e0e0;
+          border-radius: 2px;
+          overflow: hidden;
+      }
+
+      .audio-progress-bar {
+          height: 100%;
+          background-color: #4a86e8;
+          width: 0%;
+          transition: width 0.1s linear;
+      }
+
+      .audio-time {
+          font-size: 12px;
+          color: #666;
+          min-width: 40px;
       }
 
       .typing-indicator {
@@ -168,6 +212,19 @@
           background-color: #f0f0f0;
       }
 
+      .audio-indicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          margin-left: 8px;
+          color: #666;
+          font-size: 12px;
+      }
+
+      .audio-indicator::before {
+          content: "🔊";
+      }
+
       @media (max-width: 768px) {
           .message {
               max-width: 90%;
@@ -200,7 +257,9 @@
     const clearButton = document.getElementById('clearButton');
 
     let currentEventSource = null;
-    let isStreaming = false; // 新增：标记是否正在流式传输
+    let isStreaming = false;
+    let currentAudioChunks = []; // 存储当前响应的音频数据块
+    let currentAudioMessageDiv = null; // 当前正在接收音频的消息div
 
     // 添加用户消息到聊天容器
     function addUserMessage(text) {
@@ -212,7 +271,7 @@
     }
 
     // 添加AI消息到聊天容器
-    function addAiMessage(text) {
+    function addAiMessage(text, audioData = null) {
       // 如果正在流式传输，先移除流式消息元素
       if (isStreaming) {
         removeStreamingMessage();
@@ -222,8 +281,22 @@
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message ai-message';
       messageDiv.textContent = text;
+
+      // 如果有音频数据，添加音频播放控件
+      if (audioData && audioData.length > 0) {
+        const audioControls = createAudioControls(audioData);
+        messageDiv.appendChild(audioControls);
+
+        // 添加音频指示器
+        const audioIndicator = document.createElement('span');
+        audioIndicator.className = 'audio-indicator';
+        audioIndicator.title = '包含语音';
+        messageDiv.appendChild(audioIndicator);
+      }
+
       chatContainer.appendChild(messageDiv);
       scrollToBottom();
+      return messageDiv;
     }
 
     // 创建AI消息流式响应元素
@@ -239,7 +312,9 @@
       messageDiv.id = 'streaming-message';
       chatContainer.appendChild(messageDiv);
       scrollToBottom();
-      isStreaming = true; // 标记开始流式传输
+      isStreaming = true;
+      currentAudioChunks = []; // 重置音频数据
+      currentAudioMessageDiv = messageDiv; // 设置当前音频消息div
       return messageDiv;
     }
 
@@ -252,13 +327,20 @@
       }
     }
 
+    // 添加音频数据到当前流式消息
+    function addAudioToStreamingMessage(audioData) {
+      if (audioData && audioData.length > 0) {
+        currentAudioChunks.push(audioData);
+      }
+    }
+
     // 移除流式响应消息元素（但不删除DOM元素）
     function removeStreamingMessage() {
       const messageDiv = document.getElementById('streaming-message');
       if (messageDiv) {
         messageDiv.removeAttribute('id');
       }
-      isStreaming = false; // 标记流式传输结束
+      isStreaming = false;
     }
 
     // 完全删除流式响应消息元素
@@ -268,6 +350,7 @@
         messageDiv.remove();
       }
       isStreaming = false;
+      currentAudioMessageDiv = null;
     }
 
     // 滚动到底部
@@ -307,6 +390,90 @@
       }
     }
 
+    // 创建音频播放控件
+    function createAudioControls(audioChunks) {
+      const audioControls = document.createElement('div');
+      audioControls.className = 'audio-controls';
+
+      // 合并所有音频数据块
+      const totalLength = audioChunks.reduce((total, chunk) => total + chunk.length, 0);
+      const combinedAudio = new Uint8Array(totalLength);
+      let offset = 0;
+      audioChunks.forEach(chunk => {
+        combinedAudio.set(chunk, offset);
+        offset += chunk.length;
+      });
+
+      // 创建Blob URL
+      const audioBlob = new Blob([combinedAudio], { type: 'audio/mp3' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // 创建音频元素
+      const audio = new Audio(audioUrl);
+
+      // 播放按钮
+      const playButton = document.createElement('button');
+      playButton.className = 'play-button';
+      playButton.textContent = '播放';
+
+      // 进度条
+      const progressContainer = document.createElement('div');
+      progressContainer.className = 'audio-progress';
+      const progressBar = document.createElement('div');
+      progressBar.className = 'audio-progress-bar';
+      progressContainer.appendChild(progressBar);
+
+      // 时间显示
+      const timeDisplay = document.createElement('div');
+      timeDisplay.className = 'audio-time';
+      timeDisplay.textContent = '0:00';
+
+      audioControls.appendChild(playButton);
+      audioControls.appendChild(progressContainer);
+      audioControls.appendChild(timeDisplay);
+
+      // 音频事件处理
+      audio.addEventListener('loadedmetadata', () => {
+        timeDisplay.textContent = formatTime(audio.duration);
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = progress + '%';
+        timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+      });
+
+      audio.addEventListener('ended', () => {
+        playButton.textContent = '播放';
+        progressBar.style.width = '0%';
+        timeDisplay.textContent = formatTime(audio.duration);
+      });
+
+      playButton.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play();
+          playButton.textContent = '暂停';
+        } else {
+          audio.pause();
+          playButton.textContent = '播放';
+        }
+      });
+
+      // 清理URL当页面卸载时
+      window.addEventListener('beforeunload', () => {
+        URL.revokeObjectURL(audioUrl);
+      });
+
+      return audioControls;
+    }
+
+    // 格式化时间显示
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
     // 发送消息到服务器
     function sendMessage() {
       const message = messageInput.value.trim();
@@ -329,26 +496,60 @@
       createStreamingMessage();
 
       // 发送请求到服务器
-      const url = `http://127.0.0.1:15977/chat?message=${encodeURIComponent(message)}`;
+      const url = `http://127.0.0.1:15977/v2/chat?message=${encodeURIComponent(message)}`;
 
       // 使用EventSource接收服务器发送的事件流
-      cleanupEventSource(); // 清理之前的事件源
+      cleanupEventSource();
       const eventSource = new EventSource(url);
       currentEventSource = eventSource;
 
       let responseText = '';
-      let hasReceivedData = false; // 标记是否收到过数据
+      let hasReceivedData = false;
 
       eventSource.onmessage = function(event) {
-        // 隐藏输入状态指示器
         hideTypingIndicator();
-
-        // 标记已收到数据
         hasReceivedData = true;
 
-        // 累积响应文本
-        responseText += event.data;
-        updateStreamingMessage(responseText);
+        try {
+          const eventData = JSON.parse(event.data);
+
+          switch (eventData.type) {
+            case 'TEXT':
+              // 累积响应文本
+              responseText += eventData.text;
+              updateStreamingMessage(responseText);
+              break;
+
+            case 'AUDIO':
+              // 处理音频数据
+              if (eventData.audioData) {
+                // 将base64音频数据转换为Uint8Array
+                const audioData = base64ToUint8Array(eventData.audioData);
+                addAudioToStreamingMessage(audioData);
+              }
+              break;
+
+            case 'END':
+              // 结束事件，完成消息处理
+              console.log('收到结束事件');
+              eventSource.close();
+
+              // 将流式消息转为普通AI消息，包含所有音频数据
+              const finalMessageDiv = addAiMessage(responseText, currentAudioChunks);
+              currentAudioMessageDiv = finalMessageDiv;
+
+              // 恢复界面
+              messageInput.disabled = false;
+              sendButton.disabled = false;
+              messageInput.focus();
+              break;
+
+            default:
+              console.warn('未知事件类型:', eventData.type);
+          }
+        } catch (e) {
+          console.error('解析事件数据失败:', e, event);
+        }
       };
 
       eventSource.onerror = function(event) {
@@ -360,45 +561,51 @@
         sendButton.disabled = false;
         messageInput.focus();
 
-        // 根据是否收到数据来决定如何处理流式消息
         if (hasReceivedData && responseText) {
           // 有收到数据：将流式消息转为普通AI消息
-          removeStreamingMessage();
+          currentAudioMessageDiv = addAiMessage(responseText, currentAudioChunks);
         } else {
           // 没有收到数据：移除流式消息并显示错误
           deleteStreamingMessage();
           addAiMessage('抱歉，没有收到服务器的响应。');
         }
 
-        // 关闭EventSource
         cleanupEventSource();
       };
     }
 
+    // Base64转Uint8Array
+    function base64ToUint8Array(base64) {
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    }
+
     // 清空聊天记录
     function clearChat() {
-      // 移除所有子元素，包括静态欢迎消息
       while (chatContainer.firstChild) {
         chatContainer.removeChild(chatContainer.firstChild);
       }
 
-      // 关闭当前流式响应
       cleanupEventSource();
       isStreaming = false;
+      currentAudioChunks = [];
+      currentAudioMessageDiv = null;
 
-      // 重新启用输入和发送按钮
       messageInput.disabled = false;
       sendButton.disabled = false;
       messageInput.focus();
 
-      // 添加欢迎消息（只添加一次）
       const welcomeMessage = document.createElement('div');
       welcomeMessage.className = 'welcome-message';
       welcomeMessage.textContent = '您好！我是龟龟，你好吗？';
       chatContainer.appendChild(welcomeMessage);
     }
 
-    // 事件监听:cite[4]
+    // 事件监听
     sendButton.addEventListener('click', sendMessage);
 
     messageInput.addEventListener('keypress', function(e) {

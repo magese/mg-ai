@@ -2,6 +2,7 @@ package com.magese.ai.mcpagent.client.tts;
 
 import cn.hutool.core.util.IdUtil;
 import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsRequest;
+import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsSentenceEndPayload;
 import com.magese.ai.mcpagent.client.tts.protocol.EventType;
 import com.magese.ai.mcpagent.client.tts.protocol.Message;
 import com.magese.ai.mcpagent.client.tts.protocol.MsgType;
@@ -148,9 +149,19 @@ public class VolcTTSSessionManager {
         try {
             // 非阻塞方式检查是否有可用的音频数据
             Message msg = volcTTSWebSocketClient.receiveMessageImmediately();
-            if (msg != null && msg.getType() == MsgType.AUDIO_ONLY_SERVER && msg.getPayload() != null) {
-                AudioChunk chunk = new AudioChunk(msg.getPayload(), volcTTSProperties.getEncoding(), false);
-                sink.next(chunk);
+            if (msg != null && msg.getPayload() != null) {
+                switch (msg.getType()) {
+                    case FULL_SERVER_RESPONSE:
+                        if (msg.getEvent() == EventType.TTS_SENTENCE_END) {
+                            VolTTSWsSentenceEndPayload payload = JacksonUtil.parseObject(msg.getPayload(), VolTTSWsSentenceEndPayload.class);
+                            sink.next(new AudioChunk(null, payload.text(), volcTTSProperties.getEncoding()));
+                        }
+                        break;
+                    case AUDIO_ONLY_SERVER:
+                        AudioChunk chunk = new AudioChunk(msg.getPayload(), null, volcTTSProperties.getEncoding());
+                        sink.next(chunk);
+                        break;
+                }
             }
         } catch (Exception e) {
             log.warn("Error processing audio chunk", e);
@@ -167,11 +178,14 @@ public class VolcTTSSessionManager {
                 Message msg = volcTTSWebSocketClient.receiveMessage();
                 switch (msg.getType()) {
                     case FULL_SERVER_RESPONSE:
+                        if (msg.getEvent() == EventType.TTS_SENTENCE_END) {
+                            VolTTSWsSentenceEndPayload payload = JacksonUtil.parseObject(msg.getPayload(), VolTTSWsSentenceEndPayload.class);
+                            sink.next(new AudioChunk(null, payload.text(), volcTTSProperties.getEncoding()));
+                        }
                         break;
                     case AUDIO_ONLY_SERVER:
                         if (msg.getPayload() != null) {
-                            AudioChunk chunk = new AudioChunk(msg.getPayload(),
-                                    volcTTSProperties.getEncoding(), false);
+                            AudioChunk chunk = new AudioChunk(msg.getPayload(), null, volcTTSProperties.getEncoding());
                             sink.next(chunk);
                             log.debug("Received remaining audio chunk: {} bytes", msg.getPayload().length);
                         }
@@ -182,8 +196,6 @@ public class VolcTTSSessionManager {
 
                 if (msg.getEvent() == EventType.SESSION_FINISHED) {
                     sessionFinished = true;
-                    // 发送最终的音频结束标记
-                    sink.next(new AudioChunk(new byte[0], volcTTSProperties.getEncoding(), true));
                     log.info("TTS session finished successfully");
                 }
             }

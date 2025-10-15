@@ -13,26 +13,28 @@ public record ChatEvent(
         EventType type,
         String text,
         byte[] audioData,
-        String audioFormat,
-        boolean isFinal
+        String audioFormat
 ) implements ToJsonString {
 
     public enum EventType {
-        TEXT, AUDIO, END
+        TEXT, AUDIO, END, PLAY
     }
 
     public static ChatEvent textEvent(String text) {
-        return new ChatEvent(EventType.TEXT, text, null, null, false);
+        return new ChatEvent(EventType.TEXT, text, null, null);
     }
 
     public static ChatEvent audioEvent(AudioChunk audio) {
-        return new ChatEvent(EventType.AUDIO, null, audio.data(), audio.format(), audio.isFinal());
+        return new ChatEvent(EventType.AUDIO, null, audio.data(), audio.format());
+    }
+
+    public static ChatEvent playEvent(AudioChunk audio) {
+        return new ChatEvent(EventType.PLAY, audio.text(), null, audio.format());
     }
 
     public static ChatEvent endEvent() {
         return ChatEvent.builder()
                 .type(EventType.END)
-                .isFinal(true)
                 .build();
     }
 }

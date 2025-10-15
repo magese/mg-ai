@@ -8,7 +8,7 @@ package com.magese.ai.mcpagent.domain;
  */
 public record AudioChunk(
         byte[] data,
-        String format,
-        boolean isFinal
+        String text,
+        String format
 ) implements ToJsonString {
 }
