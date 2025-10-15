@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     messageDiv.appendChild(mainText);
 
     // 如果有音频文本，添加音频文本（小字号）
-    if (audioTexts.length > 0) {
+    if(audioTexts.length > 0) {
       const audioTextDiv = document.createElement('div');
       audioTextDiv.className = 'audio-text';
       audioTextDiv.textContent = audioTexts.join(' ');
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 如果有音频数据，添加音频播放控件
-    if (audioData && audioData.length > 0) {
+    if(audioData && audioData.length > 0) {
       console.log('创建音频控件，音频数据长度:', audioData.length);
       const audioControls = createAudioControls(audioData);
       messageDiv.appendChild(audioControls);
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function createStreamingMessage() {
     // 先检查是否已存在流式消息元素，避免重复创建
     const existingStreaming = document.getElementById('streaming-message');
-    if (existingStreaming) {
+    if(existingStreaming) {
       return existingStreaming;
     }
 
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 更新流式响应消息
   function updateStreamingMessage(text) {
     const mainText = document.getElementById('streaming-main-text');
-    if (mainText) {
+    if(mainText) {
       mainText.textContent = text;
       scrollToBottom();
     }
@@ -111,9 +111,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // 更新流式音频文本
   function updateStreamingAudioText(text) {
     const audioText = document.getElementById('streaming-audio-text');
-    if (audioText) {
+    if(audioText) {
       // 避免重复添加相同的文本
-      if (!audioTexts.includes(text)) {
+      if(!audioTexts.includes(text)) {
         audioTexts.push(text);
         audioText.textContent = audioTexts.join(' ');
         scrollToBottom();
@@ -123,25 +123,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 添加音频数据到当前流式消息
   function addAudioToStreamingMessage(audioData) {
-    if (audioData && audioData.length > 0) {
+    if(audioData && audioData.length > 0) {
       currentAudioChunks.push(audioData);
       allAudioChunks.push(audioData); // 同时添加到所有音频数据
     }
   }
 
-  // 移除流式响应消息元素（但不删除DOM元素）
-  function removeStreamingMessage() {
-    const messageDiv = document.getElementById('streaming-message');
-    if (messageDiv) {
-      messageDiv.removeAttribute('id');
-    }
-    isStreaming = false;
-  }
-
   // 完全删除流式响应消息元素
   function deleteStreamingMessage() {
     const messageDiv = document.getElementById('streaming-message');
-    if (messageDiv) {
+    if(messageDiv) {
       messageDiv.remove();
     }
     isStreaming = false;
@@ -159,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     indicatorDiv.className = 'typing-indicator';
     indicatorDiv.id = 'typing-indicator';
 
-    for (let i = 0; i < 3; i++) {
+    for(let i = 0; i < 3; i++) {
       const dot = document.createElement('div');
       dot.className = 'typing-dot';
       indicatorDiv.appendChild(dot);
@@ -172,14 +163,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // 隐藏输入状态指示器
   function hideTypingIndicator() {
     const indicator = document.getElementById('typing-indicator');
-    if (indicator) {
+    if(indicator) {
       indicator.remove();
     }
   }
 
   // 清理事件源
   function cleanupEventSource() {
-    if (currentEventSource) {
+    if(currentEventSource) {
       currentEventSource.close();
       currentEventSource = null;
     }
@@ -200,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 创建Blob URL
-    const audioBlob = new Blob([combinedAudio], { type: 'audio/mp3' });
+    const audioBlob = new Blob([combinedAudio], {type: 'audio/mp3'});
     const audioUrl = URL.createObjectURL(audioBlob);
 
     // 创建音频元素
@@ -234,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     audio.addEventListener('timeupdate', () => {
-      if (audio.duration) {
+      if(audio.duration) {
         const progress = (audio.currentTime / audio.duration) * 100;
         progressBar.style.width = progress + '%';
         timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
@@ -244,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
     audio.addEventListener('ended', () => {
       playButton.textContent = '播放';
       progressBar.style.width = '0%';
-      if (audio.duration) {
+      if(audio.duration) {
         timeDisplay.textContent = formatTime(audio.duration);
       }
     });
@@ -254,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     playButton.addEventListener('click', () => {
-      if (audio.paused) {
+      if(audio.paused) {
         audio.play().then(() => {
           playButton.textContent = '暂停';
         }).catch(e => {
@@ -276,12 +267,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 播放音频队列
   function playAudioQueue() {
-    if (isPlaying || audioQueue.length === 0) return;
+    if(isPlaying || audioQueue.length === 0) return;
 
     isPlaying = true;
 
     const playNext = () => {
-      if (audioQueue.length === 0) {
+      if(audioQueue.length === 0) {
         isPlaying = false;
         return;
       }
@@ -289,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const {audioData, text} = audioQueue.shift();
 
       // 更新音频文本显示
-      if (text && !audioTexts.includes(text)) {
+      if(text && !audioTexts.includes(text)) {
         updateStreamingAudioText(text);
       }
 
@@ -303,11 +294,11 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       // 创建Blob URL
-      const audioBlob = new Blob([combinedAudio], { type: 'audio/mp3' });
+      const audioBlob = new Blob([combinedAudio], {type: 'audio/mp3'});
       const audioUrl = URL.createObjectURL(audioBlob);
 
       // 停止当前播放的音频
-      if (currentAudioElement) {
+      if(currentAudioElement) {
         currentAudioElement.pause();
         URL.revokeObjectURL(currentAudioElement.src);
       }
@@ -333,14 +324,14 @@ document.addEventListener('DOMContentLoaded', function() {
     audioQueue.push({audioData, text});
 
     // 如果没有正在播放，开始播放队列
-    if (!isPlaying) {
+    if(!isPlaying) {
       playAudioQueue();
     }
   }
 
   // 格式化时间显示
   function formatTime(seconds) {
-    if (isNaN(seconds) || seconds === Infinity) return '0:00';
+    if(isNaN(seconds) || seconds === Infinity) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -349,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 发送消息到服务器
   function sendMessage() {
     const message = messageInput.value.trim();
-    if (!message) return;
+    if(!message) return;
 
     // 禁用输入和发送按钮
     messageInput.disabled = true;
@@ -384,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         const eventData = JSON.parse(event.data);
 
-        switch (eventData.type) {
+        switch(eventData.type) {
           case 'TEXT':
             // 累积响应文本
             responseText += eventData.text;
@@ -393,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
           case 'AUDIO':
             // 处理音频数据
-            if (eventData.audioData) {
+            if(eventData.audioData) {
               // 将base64音频数据转换为Uint8Array
               const audioData = base64ToUint8Array(eventData.audioData);
               addAudioToStreamingMessage(audioData);
@@ -403,12 +394,12 @@ document.addEventListener('DOMContentLoaded', function() {
           case 'PLAY':
             // 播放事件：将音频添加到播放队列
             // 注意：PLAY事件的text只用于音频文本，不拼接到主要文本
-            if (eventData.text) {
+            if(eventData.text) {
               updateStreamingAudioText(eventData.text);
             }
 
             // 将当前收集的音频添加到播放队列
-            if (currentAudioChunks.length > 0) {
+            if(currentAudioChunks.length > 0) {
               addAudioToQueue([...currentAudioChunks], eventData.text);
               currentAudioChunks = []; // 清空当前音频数据，准备接收下一段
             }
@@ -420,12 +411,11 @@ document.addEventListener('DOMContentLoaded', function() {
             eventSource.close();
 
             // 确保只创建一次最终消息
-            if (!hasCreatedFinalMessage) {
+            if(!hasCreatedFinalMessage) {
               hasCreatedFinalMessage = true;
 
               // 将流式消息转为普通AI消息，包含所有音频数据
-              const finalMessageDiv = addAiMessage(responseText, allAudioChunks);
-              currentAudioMessageDiv = finalMessageDiv;
+              currentAudioMessageDiv = addAiMessage(responseText, allAudioChunks);
 
               // 移除流式消息
               deleteStreamingMessage();
@@ -440,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
           default:
             console.warn('未知事件类型:', eventData.type);
         }
-      } catch (e) {
+      } catch(e) {
         console.error('解析事件数据失败:', e, event);
       }
     };
@@ -455,13 +445,12 @@ document.addEventListener('DOMContentLoaded', function() {
       messageInput.focus();
 
       // 确保只创建一次最终消息
-      if (!hasCreatedFinalMessage) {
+      if(!hasCreatedFinalMessage) {
         hasCreatedFinalMessage = true;
 
-        if (hasReceivedData && responseText) {
+        if(hasReceivedData && responseText) {
           // 有收到数据：将流式消息转为普通AI消息
-          const finalMessageDiv = addAiMessage(responseText, allAudioChunks);
-          currentAudioMessageDiv = finalMessageDiv;
+          currentAudioMessageDiv = addAiMessage(responseText, allAudioChunks);
         } else {
           // 没有收到数据：移除流式消息并显示错误
           deleteStreamingMessage();
@@ -477,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function base64ToUint8Array(base64) {
     const binaryString = atob(base64);
     const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
+    for(let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
     return bytes;
@@ -485,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 清空聊天记录
   function clearChat() {
-    while (chatContainer.firstChild) {
+    while(chatContainer.firstChild) {
       chatContainer.removeChild(chatContainer.firstChild);
     }
 
@@ -501,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
     hasCreatedFinalMessage = false;
 
     // 停止当前播放的音频
-    if (currentAudioElement) {
+    if(currentAudioElement) {
       currentAudioElement.pause();
       currentAudioElement = null;
     }
@@ -520,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
   sendButton.addEventListener('click', sendMessage);
 
   messageInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if(e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
