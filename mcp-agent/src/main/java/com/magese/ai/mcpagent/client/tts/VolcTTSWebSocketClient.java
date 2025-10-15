@@ -293,7 +293,7 @@ public class VolcTTSWebSocketClient {
             if (message == null) {
                 throw new TimeoutException("接收消息超时");
             }
-            log.info("语音合成接收：{}", message);
+            log.debug("语音合成接收：{}", message);
             return message;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -307,7 +307,7 @@ public class VolcTTSWebSocketClient {
     public Message receiveMessageImmediately() {
         Message message = messageQueue.poll();
         if (message != null) {
-            log.info("try语音合成接收：{}", message);
+            log.debug("try语音合成接收：{}", message);
         }
         return message;
     }
