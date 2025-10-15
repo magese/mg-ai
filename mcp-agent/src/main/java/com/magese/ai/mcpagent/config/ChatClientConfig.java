@@ -30,7 +30,7 @@ public class ChatClientConfig {
                                        MessageChatMemoryAdvisor chatMemoryAdvisor,
                                        LogAdvisor logAdvisor) {
         return ChatClient.builder(deepSeekChatModel)
-                .defaultSystem(new ClassPathResource("prompts/guigui-system.md"))
+                .defaultSystem(new ClassPathResource("prompts/fufu-system.md"))
                 .defaultAdvisors(
                         chatMemoryAdvisor,
                         logAdvisor
@@ -47,7 +47,7 @@ public class ChatClientConfig {
 
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(50)
+                .maxMessages(200)
                 .build();
     }
 

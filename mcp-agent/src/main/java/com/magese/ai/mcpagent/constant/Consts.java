@@ -9,4 +9,6 @@ package com.magese.ai.mcpagent.constant;
 public interface Consts {
 
     String LOCAL_FILE_DIR = "/app/data/mcp-agent/";
+
+    String USER_ID_FUFU = "fufu20251015";
 }

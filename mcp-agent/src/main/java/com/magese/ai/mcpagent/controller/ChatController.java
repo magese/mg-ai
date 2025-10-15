@@ -1,6 +1,7 @@
 package com.magese.ai.mcpagent.controller;
 
 import com.magese.ai.mcpagent.client.tts.domain.VolTTSWsResult;
+import com.magese.ai.mcpagent.constant.Consts;
 import com.magese.ai.mcpagent.domain.ChatEvent;
 import com.magese.ai.mcpagent.service.TTSService;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class ChatController {
 
         return guiguiChatClient.prompt()
                 .user(message)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, 1))
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, Consts.USER_ID_FUFU))
                 .stream()
                 .content()
                 .concatMap(text -> {
