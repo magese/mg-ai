@@ -1,0 +1,38 @@
+server:
+  port: 13333
+
+spring:
+  application:
+    name: youcash-agent
+  profiles:
+    active: dev
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-v4-flash
+    openai:
+      api-key: ${OPENAI_EMBEDDING_API_KEY}
+      embedding:
+        base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+        options:
+          model: text-embedding-v4
+          dimensions: 1024
+    vectorstore:
+      milvus:
+        client:
+          host: ${MILVUS_HOST}
+          port: ${MILVUS_PORT}
+          username: ${MILVUS_USERNAME}
+          password: ${MILVUS_PASSWORD}
+        collection-name: youcash_rag_collection
+        embedding-dimension: 1024
+        index-type: ivf_flat
+        metric-type: cosine
+        initialize-schema: true
+
+logging:
+  level:
+    root: info
